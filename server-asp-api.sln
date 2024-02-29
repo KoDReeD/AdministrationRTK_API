@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "server-asp-api", "server-asp-api\server-asp-api.csproj", "{7799D7D7-916E-4B7D-A787-C9CCB5B13820}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7799D7D7-916E-4B7D-A787-C9CCB5B13820}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7799D7D7-916E-4B7D-A787-C9CCB5B13820}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7799D7D7-916E-4B7D-A787-C9CCB5B13820}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7799D7D7-916E-4B7D-A787-C9CCB5B13820}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
