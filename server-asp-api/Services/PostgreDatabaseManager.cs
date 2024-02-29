@@ -7,7 +7,7 @@ namespace server_asp_api.Services;
 
 public class PostgreDatabaseManager : IDatabaseManager
 {
-    public string BaseConnection { get; set; } = "";
+    public string BaseConnection { get; set; } = "Host=localhost;Username=postgres;Password=admin;";
     /// <summary>
     /// Метод который создаёт БД и пользователь вызывая готовые методы
     /// </summary>
@@ -53,11 +53,11 @@ public class PostgreDatabaseManager : IDatabaseManager
     /// </summary>
     /// <param name="databaseName"></param>
     /// <returns></returns>
-    protected override async Task<BoolMethodResult> CreateDatabase(string databaseName)
+    protected override async Task<BoolMethodResult> CreateDatabase(string username)
     {
         try
         {
-            string sqlCommandExists = $@"SELECT 1 FROM pg_database WHERE datname = '{databaseName}'";
+            string sqlCommandExists = $@"SELECT 1 FROM pg_database WHERE datname = '{username}'";
             var dbCheck = await GetCommandResult(BaseConnection, sqlCommandExists);
 
             BoolMethodResult result;
@@ -67,7 +67,7 @@ public class PostgreDatabaseManager : IDatabaseManager
                 return result;
             }
         
-            string sqlCommand = $@"CREATE DATABASE {databaseName}";
+            string sqlCommand = $@"CREATE DATABASE {username}";
             var dbCreateResult = await SendCommand(BaseConnection, sqlCommand);
 
             if (!dbCreateResult.IsSuccess)
@@ -148,19 +148,11 @@ public class PostgreDatabaseManager : IDatabaseManager
                 }
             }
 
-            return new BoolMethodResult()
-            {
-                IsSuccess = true,
-                Message = null
-            };
+            return BoolMethodResult.GetBadRequest(null);
         }
         catch (Exception e)
         {
-            return new BoolMethodResult()
-            {
-                IsSuccess = true,
-                Message = e.Message
-            };
+            return BoolMethodResult.GetBadRequest(null);
         }
     }
 
