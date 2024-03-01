@@ -7,58 +7,17 @@ namespace server_asp_api.Services;
 
 public class PostgreDatabaseManager : IDatabaseManager
 {
-    private string _baseConnection { get; } = "Host=localhost;Username=postgres;Password=admin;";
-    /// <summary>
-    /// Метод который создаёт БД и пользователь вызывая готовые методы
-    /// </summary>
-    /// <param name="username"></param>
-    /// <param name="password"></param>
-    /// <returns></returns>
-    public override async Task<ResultModel> Register(string username, string password)
-    {
-        var createDbModel = await CreateDatabase(username);
-        if (!createDbModel.IsSuccess)
-        {
-            ResultModel result = new ResultModel()
-            {
-                Data = null,
-                Message = createDbModel.Message,
-                StatusCode = HttpStatusCode.BadRequest
-            };
-            return result;
-        }
-        var createUser = await CreateUser(username, password);
-        if (!createUser.IsSuccess)
-        {
-            ResultModel result = new ResultModel()
-            {
-                Data = null,
-                Message = createUser.Message,
-                StatusCode = HttpStatusCode.BadRequest
-            };
-            return result;
-        }
-
-        ResultModel resultModel = new ResultModel()
-        {
-            Data = null,
-            Message = "Успешно",
-            StatusCode = HttpStatusCode.Created
-        };
-        return resultModel;
-    }
-
     /// <summary>
     /// Метод создаёт БД
     /// </summary>
     /// <param name="databaseName"></param>
     /// <returns></returns>
-    protected override async Task<BoolMethodResult> CreateDatabase(string username)
+    protected override async Task<BoolMethodResult> CreateDatabase(string username, string connectionString)
     {
         try
         {
             string sqlCommandExists = $@"SELECT 1 FROM pg_database WHERE datname = '{username}'";
-            var dbCheck = await GetCommandResult(_baseConnection, sqlCommandExists);
+            var dbCheck = await GetCommandResult(connectionString, sqlCommandExists);
 
             BoolMethodResult result;
             if (dbCheck != null && dbCheck.Count > 0)
@@ -67,8 +26,8 @@ public class PostgreDatabaseManager : IDatabaseManager
                 return result;
             }
         
-            string sqlCommand = $@"CREATE DATABASE ""{username}""";
-            var dbCreateResult = await SendCommand(_baseConnection, sqlCommand);
+            string sqlCommand = $"CREATE DATABASE \"{username}\"";
+            var dbCreateResult = await SendCommand(connectionString, sqlCommand);
 
             if (!dbCreateResult.IsSuccess)
             {
@@ -91,12 +50,12 @@ public class PostgreDatabaseManager : IDatabaseManager
     /// <param name="databaseName"></param>
     /// <param name="password"></param>
     /// <returns></returns>
-    protected override async Task<BoolMethodResult> CreateUser(string databaseName, string password)
+    protected override async Task<BoolMethodResult> CreateUser(string databaseName, string password, string connectionString)
     {
         try
         {
             string sqlCommandExists = $@"SELECT 1 FROM pg_roles WHERE rolname = '{databaseName}';";
-            var userCheck = await GetCommandResult(_baseConnection, sqlCommandExists);
+            var userCheck = await GetCommandResult(connectionString, sqlCommandExists);
             BoolMethodResult result;
             if (userCheck != null && userCheck.Count > 0)
             {
@@ -109,7 +68,7 @@ public class PostgreDatabaseManager : IDatabaseManager
                                 $"GRANT USAGE ON SCHEMA public TO \"{databaseName}\";" +
                                 $"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO \"{databaseName}\";";
 
-            var createUserResult = await SendCommand(_baseConnection+$"Database={databaseName}", sqlCommand);
+            var createUserResult = await SendCommand(connectionString+$"Database={databaseName}", sqlCommand);
             if (!createUserResult.IsSuccess)
             {
                 result = BoolMethodResult.GetBadRequest($"Пользователь не создан: {createUserResult.Message}");

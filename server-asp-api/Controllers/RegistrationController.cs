@@ -31,12 +31,24 @@ public class RegistrationController : ControllerBase
             
         }
     }
+    
+    //TODO: пофиксить отображение всех бд в MSsql и ролей (если можно)
 
     [HttpPost]
     public async Task<IActionResult> Postgre(string username, string password)
     {
+        var connectionString = "";
         PostgreDatabaseManager manager = new PostgreDatabaseManager();
-        var result = await manager.Register(username,password);
+        var result = await manager.Register(username,password, connectionString);
+        return Ok(result);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> Mssql(string username, string password)
+    {
+        var connectionString = "";
+        MssqlDatabaseManager manager = new MssqlDatabaseManager();
+        var result = await manager.Register(username,password, connectionString);
         return Ok(result);
     }
 }
