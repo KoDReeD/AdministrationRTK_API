@@ -7,7 +7,7 @@ namespace server_asp_api.Services;
 
 public class PostgreDatabaseManager : IDatabaseManager
 {
-    public string BaseConnection { get; set; } = "Host=localhost;Username=postgres;Password=admin;";
+    private string _baseConnection { get; } = "Host=localhost;Username=postgres;Password=admin;";
     /// <summary>
     /// Метод который создаёт БД и пользователь вызывая готовые методы
     /// </summary>
@@ -33,7 +33,7 @@ public class PostgreDatabaseManager : IDatabaseManager
             ResultModel result = new ResultModel()
             {
                 Data = null,
-                Message = createDbModel.Message,
+                Message = createUser.Message,
                 StatusCode = HttpStatusCode.BadRequest
             };
             return result;
@@ -58,7 +58,7 @@ public class PostgreDatabaseManager : IDatabaseManager
         try
         {
             string sqlCommandExists = $@"SELECT 1 FROM pg_database WHERE datname = '{username}'";
-            var dbCheck = await GetCommandResult(BaseConnection, sqlCommandExists);
+            var dbCheck = await GetCommandResult(_baseConnection, sqlCommandExists);
 
             BoolMethodResult result;
             if (dbCheck != null && dbCheck.Count > 0)
@@ -67,8 +67,8 @@ public class PostgreDatabaseManager : IDatabaseManager
                 return result;
             }
         
-            string sqlCommand = $@"CREATE DATABASE {username}";
-            var dbCreateResult = await SendCommand(BaseConnection, sqlCommand);
+            string sqlCommand = $@"CREATE DATABASE ""{username}""";
+            var dbCreateResult = await SendCommand(_baseConnection, sqlCommand);
 
             if (!dbCreateResult.IsSuccess)
             {
@@ -96,20 +96,20 @@ public class PostgreDatabaseManager : IDatabaseManager
         try
         {
             string sqlCommandExists = $@"SELECT 1 FROM pg_roles WHERE rolname = '{databaseName}';";
-            var userCheck = await GetCommandResult(BaseConnection, sqlCommandExists);
+            var userCheck = await GetCommandResult(_baseConnection, sqlCommandExists);
             BoolMethodResult result;
             if (userCheck != null && userCheck.Count > 0)
             {
-                result = BoolMethodResult.GetSuccessResult("Пользователь создан");
+                result = BoolMethodResult.GetBadRequest("Пользователь уже добавлен");
                 return result;
             }
             
-            string sqlCommand = $"CREATE USER {databaseName} WITH PASSWORD '{password}';" +
-                                $"GRANT CONNECT ON DATABASE {databaseName} TO {databaseName};" +
-                                $"GRANT USAGE ON SCHEMA public TO {databaseName};" +
-                                $"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {databaseName};";
+            string sqlCommand = $"CREATE USER \"{databaseName}\" WITH PASSWORD '{password}';" +
+                                $"GRANT CONNECT ON DATABASE \"{databaseName}\" TO \"{databaseName}\";" +
+                                $"GRANT USAGE ON SCHEMA public TO \"{databaseName}\";" +
+                                $"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO \"{databaseName}\";";
 
-            var createUserResult = await SendCommand(BaseConnection+$"Database={databaseName}", sqlCommand);
+            var createUserResult = await SendCommand(_baseConnection+$"Database={databaseName}", sqlCommand);
             if (!createUserResult.IsSuccess)
             {
                 result = BoolMethodResult.GetBadRequest($"Пользователь не создан: {createUserResult.Message}");
@@ -148,7 +148,7 @@ public class PostgreDatabaseManager : IDatabaseManager
                 }
             }
 
-            return BoolMethodResult.GetBadRequest(null);
+            return BoolMethodResult.GetSuccessResult(null);
         }
         catch (Exception e)
         {
