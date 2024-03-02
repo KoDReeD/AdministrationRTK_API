@@ -1,16 +1,16 @@
 ﻿using System.Data.SqlClient;
-using System.Net;
+using MySqlConnector;
 using server_asp_api.Models;
 
 namespace server_asp_api.Services;
 
-public class MssqlDatabaseManager : IDatabaseManager
+public class MysqlDatabaseNanager : IDatabaseManager
 {
     protected override async Task<BoolMethodResult> CreateDatabase(string username, string connectionString)
     {
         try
         {
-            string sqlCommand = $"IF NOT EXISTS (SELECT name FROM master.dbo.sysdatabases WHERE name = N'{username}') CREATE DATABASE \"{username}\";";
+            string sqlCommand = $"CREATE DATABASE IF NOT EXISTS `{username}`";
             var dbCreateResult = await SendCommand(connectionString, sqlCommand);
 
             BoolMethodResult result;
@@ -33,7 +33,7 @@ public class MssqlDatabaseManager : IDatabaseManager
     {
         try
         {
-            string sqlCommandExists = $@"SELECT * FROM sys.server_principals WHERE name = '{database}';";
+            string sqlCommandExists = $@"SELECT User FROM mysql.user WHERE User = '{database}';";
             var userCheck = await GetCommandResult(connectionString, sqlCommandExists);
             BoolMethodResult result;
             if (userCheck != null && userCheck.Count > 0)
@@ -42,23 +42,13 @@ public class MssqlDatabaseManager : IDatabaseManager
                 return result;
             }
 
-            string sqlCommand =
-                $"CREATE LOGIN [{database}] WITH PASSWORD = '{password}'; " +
-                $"USE [{database}]; " +
-                $"CREATE USER [{database}] FOR LOGIN [{database}]; " +
-                $"GRANT CONNECT TO [{database}]; " +
-                $"GRANT ALTER ON SCHEMA :: dbo TO [{database}];" +
-                $"GRANT SELECT,UPDATE,INSERT,DELETE ON SCHEMA::dbo TO [{database}];;" +
-                $"GRANT CREATE TABLE TO [{database}];" +
-                $"GRANT CREATE VIEW TO [{database}];" +
-                $"GRANT CREATE PROCEDURE TO [{database}];" +
-                $"GRANT EXECUTE TO [{database}];";
-                // $"GRANT ALTER ON SCHEMA::dbo TO {database};" +
-                // $"ALTER ROLE db_datareader ADD MEMBER {database} WITH DEFAULT_SCHEMA = dbo; " +
-                // $"ALTER ROLE db_datawriter ADD MEMBER {database} WITH DEFAULT_SCHEMA = dbo;" +
-                // $"ALTER ROLE db_ddladmin ADD MEMBER {database} WITH DEFAULT_SCHEMA = dbo;";
 
-            var createUserResult = await SendCommand(connectionString+$"Database={database}", sqlCommand);
+            string sqlCommand =
+                $"CREATE USER `{database}`@'localhost' IDENTIFIED BY '{password}';" +
+                $"GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP ON `{database}`.* TO '{database}'@'localhost';" +
+                $"FLUSH PRIVILEGES;";
+
+                var createUserResult = await SendCommand(connectionString+$"Database={database}", sqlCommand);
             if (!createUserResult.IsSuccess)
             {
                 result = BoolMethodResult.GetBadRequest($"Пользователь не создан: {createUserResult.Message}");
@@ -78,16 +68,16 @@ public class MssqlDatabaseManager : IDatabaseManager
     {
         try
         {
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new MySqlConnection(connectionString))
             {
                 await connection.OpenAsync();
 
-                using (var cmd = new SqlCommand())
+                using (var cmd = new MySqlCommand())
                 {
                     cmd.Connection = connection;
 
                     cmd.CommandText = command;
-                    await cmd.ExecuteReaderAsync();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
 
@@ -109,11 +99,11 @@ public class MssqlDatabaseManager : IDatabaseManager
     {
         try
         {
-            using (var connection = new SqlConnection(connectionString))
+            using (var connection = new MySqlConnection(connectionString))
             {
                 await connection.OpenAsync();
 
-                using (var cmd = new SqlCommand())
+                using (var cmd = new MySqlCommand())
                 {
                     cmd.Connection = connection;
 
@@ -140,4 +130,6 @@ public class MssqlDatabaseManager : IDatabaseManager
             return null;
         }
     }
+    
+    
 }

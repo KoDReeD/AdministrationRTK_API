@@ -37,7 +37,7 @@ public class RegistrationController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Postgre(string username, string password)
     {
-        var connectionString = "";
+        var connectionString = "Host=localhost;Username=postgres;Password=admin;";
         PostgreDatabaseManager manager = new PostgreDatabaseManager();
         var result = await manager.Register(username,password, connectionString);
         return Ok(result);
@@ -46,8 +46,17 @@ public class RegistrationController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Mssql(string username, string password)
     {
-        var connectionString = "";
+        var connectionString = "Server=localhost;User Id=admin;Password=admin;Trusted_Connection=True;";
         MssqlDatabaseManager manager = new MssqlDatabaseManager();
+        var result = await manager.Register(username,password, connectionString);
+        return Ok(result);
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> Mysql(string username, string password)
+    {
+        var connectionString = "server=localhost;user=root;port=3306;password=admin;Allow User Variables=true;";
+        MysqlDatabaseNanager manager = new MysqlDatabaseNanager();
         var result = await manager.Register(username,password, connectionString);
         return Ok(result);
     }
