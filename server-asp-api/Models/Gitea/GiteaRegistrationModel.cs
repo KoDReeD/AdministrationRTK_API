@@ -6,7 +6,7 @@ public class GiteaRegistrationModel
     public string Email { get; set; }
     public string? Full_Name { get; set; }
     public string? Login_Name { get; set; }
-    public bool Must_Change_Password { get; set; }
+    public bool Must_Change_Password { get; set; } = false;
     public string Password { get; set; }
     public bool Restricted { get; set; }
     public bool Send_Notify { get; set; }

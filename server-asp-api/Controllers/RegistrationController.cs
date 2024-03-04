@@ -14,47 +14,11 @@ namespace server_asp_api.Controllers;
 public class RegistrationController : ControllerBase
 {
     [HttpPost]
-    public async Task<ResultModel> RegistrationOnGitea(GiteaRegistrationModel data)
+    public async Task<IActionResult> RegistrationOnGitea(GiteaRegistrationModel data)
     {
-        string adminUsername = "";
-        string adminPassword = "";
-        string base64Credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(adminUsername + ":" + adminPassword));
-        var url = "http://localhost:3031/api/v1/admin/users";
-
-        var jsonData = JsonConvert.SerializeObject(data);
-        var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
-
-        using (HttpClient client = new HttpClient())
-        {
-            client.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", base64Credentials);
-            HttpResponseMessage response = await client.PostAsync(url, content);
-
-            if (response.IsSuccessStatusCode)
-            {
-                string responseContent = await response.Content.ReadAsStringAsync();
-                var obj = JsonConvert.DeserializeObject<GiteaUserObject>(responseContent);
-                var responseData = new ResultModel()
-                {
-                    Data = obj,
-                    Message = "успех",
-                    StatusCode = HttpStatusCode.BadRequest
-                };
-                return responseData;
-            }
-            else
-            {
-                string responseContent = response.Content.ReadAsStringAsync().Result;
-                GiteaBadResponse dataJson = JsonConvert.DeserializeObject<GiteaBadResponse>(responseContent);
-                var responseData = new ResultModel()
-                {
-                    Data = dataJson,
-                    Message = "ошибка",
-                    StatusCode = HttpStatusCode.BadRequest
-                };
-                return responseData;
-            }
-        }
+        GiteaService service = new GiteaService();
+        var result = await service.RegisterUser(data);
+        return result.StatusCode.ToString().StartsWith("2") ? Ok(result) : BadRequest(result);
     }
 
     
@@ -67,7 +31,7 @@ public class RegistrationController : ControllerBase
         var connectionString = "Host=localhost;Username=postgres;Password=admin;";
         PostgreDatabaseManager manager = new PostgreDatabaseManager();
         var result = await manager.Register(username, password, connectionString);
-        return Ok(result);
+        return result.StatusCode.ToString().StartsWith("2") ? Ok(result) : BadRequest(result);
     }
 
     [HttpPost]
@@ -76,7 +40,7 @@ public class RegistrationController : ControllerBase
         var connectionString = "Server=localhost;User Id=admin;Password=admin;Trusted_Connection=True;";
         MssqlDatabaseManager manager = new MssqlDatabaseManager();
         var result = await manager.Register(username, password, connectionString);
-        return Ok(result);
+        return result.StatusCode.ToString().StartsWith("2") ? Ok(result) : BadRequest(result);
     }
 
     [HttpPost]
@@ -85,6 +49,6 @@ public class RegistrationController : ControllerBase
         var connectionString = "server=localhost;user=root;port=3306;password=admin;Allow User Variables=true;";
         MysqlDatabaseNanager manager = new MysqlDatabaseNanager();
         var result = await manager.Register(username, password, connectionString);
-        return Ok(result);
+        return result.StatusCode.ToString().StartsWith("2") ? Ok(result) : BadRequest(result);
     }
 }
