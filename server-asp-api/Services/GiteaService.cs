@@ -8,8 +8,9 @@ namespace server_asp_api.Services;
 
 public class GiteaService
 {
-    public async Task<ResultModel> RegisterUser(GiteaRegistrationModel data)
+    public async Task<ResultModel> RegisterUser(GiteaRegistrationModel giteaRegistrationModel)
     {
+        GiteaRegistrationModel data = new GiteaRegistrationModel();
         string adminUsername = "";
         string adminPassword = "";
         string base64Credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(adminUsername + ":" + adminPassword));

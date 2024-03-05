@@ -14,17 +14,21 @@ namespace server_asp_api.Controllers;
 public class RegistrationController : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> RegistrationOnGitea(GiteaRegistrationModel data)
+    public async Task<IActionResult> RegistrationOnGitea(GiteaRegistrationData data)
     {
+        GiteaRegistrationModel fullData = new GiteaRegistrationModel()
+        {
+            Password = data.Password,
+            Username = data.Username,
+            Created_At = DateTimeOffset.Now,
+            Email = data.Email,
+            Full_Name = data.Full_Name
+        };
         GiteaService service = new GiteaService();
-        var result = await service.RegisterUser(data);
+        var result = await service.RegisterUser(fullData);
         return result.StatusCode.ToString().StartsWith("2") ? Ok(result) : BadRequest(result);
     }
-
     
-
-    //TODO: пофиксить отображение всех бд в MSsql и ролей (если можно)
-
     [HttpPost]
     public async Task<IActionResult> Postgre(string username, string password)
     {
